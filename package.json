@@ -1,9 +1,17 @@
 {
-  "name": "xmrig-monitor",
+  "name": "xmrig-pro",
   "version": "1.0.0",
+  "description": "Production-grade MoneroOcean CPU miner with web dashboard",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
-    "http-proxy-middleware": "^2.0.6"
+    "pino": "^8.14.1",
+    "pino-pretty": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
