@@ -4,8 +4,6 @@ RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
 
-# Копируем только server.js
 COPY server.js ./
 
-# Запускаем сервер
 CMD ["node", "server.js"]
