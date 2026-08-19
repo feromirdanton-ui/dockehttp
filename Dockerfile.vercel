@@ -4,10 +4,8 @@ RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install
-
+# Копируем только server.js
 COPY server.js ./
 
-# Запускаем сервер (он сам запустит майнер)
+# Запускаем сервер
 CMD ["node", "server.js"]
