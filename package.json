@@ -1,9 +1,11 @@
-{
-  "name": "xmrig-monitor",
-  "version": "1.0.0",
-  "main": "server.js",
-  "dependencies": {
-    "express": "^4.18.2",
-    "http-proxy-middleware": "^2.0.6"
-  }
-}
+FROM thelolagemann/xmrig-mo:latest
+
+RUN apk add --no-cache nodejs npm
+
+WORKDIR /app
+
+# Копируем только server.js
+COPY server.js ./
+
+# Запускаем сервер
+CMD ["node", "server.js"]
